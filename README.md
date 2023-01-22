@@ -1,9 +1,16 @@
 This is a simple bash script for offline reading of Hacker News
-(news.ycombinator.com). It downloads the front page (the top 30 items)
-along with their comment threads for offline reading.
+(news.ycombinator.com). By default it downloads the current
+front page (the top 30 items) along with their comment threads
+for offline reading.
 
 ```
 bash hn_offline.sh
+```
+
+You can also download the frontpage from a past day:
+
+```
+bash hn_offline.sh --date 2021-12-11
 ```
 
 External links are not archived; these are still offline links.
@@ -19,13 +26,13 @@ collapse threads or hide individual posts.
 
 # What's the purpose of this?
 
-I use it to use Hacker News like a "newspaper" instead of a constantly-
+I use it to use Hacker News like a "newspaper" instead of a constantly
 changing page that I try to check every day or even multiple times a day to
 see if there's something new.
 
-I run a weekly cronjob that refreshes an offline copy on a local web server.
-Then, I can point my browser at that local copy instead of at
-news.ycombinator.com.
+I run a weekly cronjob that refreshes an offline copy from earlier in the week
+on a local web server. Then, I can point my browser at that local copy
+instead of at news.ycombinator.com.
 
 # Is this allowed?
 

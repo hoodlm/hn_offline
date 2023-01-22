@@ -100,22 +100,41 @@ do_download() {
   local tmp_dir="./tmp"
   local out_dir="./out"
   local target_site="news.ycombinator.com"
+  local front_page
+  if [ -z "${extracted_date:-}" ]; then
+    front_page="${target_site}"
+  else
+    front_page="${target_site}/front?day=${extracted_date}"
+  fi
 
   printf "Clearing %s and %s directories\n" "${tmp_dir}" "${out_dir}"
 
   rm ${tmp_dir}/* || true
   rm ${out_dir}/* || true
 
-  download "${target_site}" "${out_dir}/index.html"
+  download "${front_page}" "${out_dir}/index.html"
   extract_comment_links "${out_dir}/index.html" "${tmp_dir}"
   sanitize_comment_links "${out_dir}/index.html"
   download_pages_from_file "${target_site}" "${tmp_dir}/comments.txt" "${out_dir}"
 }
 
+error() {
+  printf "Error: %s\n" "$1"
+  exit 1
+}
+
 handle_args() {
   if [ "$1" = "help" ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Help info goes here"
+    echo "USAGE: $0 [--date YYYY-MM-DD]"
     exit 0
+  fi
+
+  local date_arg
+  date_arg=$(echo "$@" | grep -E -o "\-\-date \S+")
+
+  if [ -n "${date_arg}" ]; then
+    extracted_date=$(echo "${date_arg}" | grep -E -o "[[:digit:]]{4}\-[[:digit:]]{2}\-[[:digit:]]{2}$") \
+      || error "Date must match YYYY-MM-DD format (e.g. 2023-01-19). Argument supplied was: \"${date_arg}\""
   fi
 }
 
