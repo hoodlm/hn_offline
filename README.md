@@ -13,7 +13,7 @@ You can also download the frontpage from a past day:
 bash hn_offline.sh --date 2021-12-11
 ```
 
-External links are not archived; these are still offline links.
+External links are not archived; these are still online links.
 
 It does not archive other features of the website, like:
 * User pages
