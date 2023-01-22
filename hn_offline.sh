@@ -41,9 +41,10 @@ sanitize_comment_links() {
 # Extract all 'comment' links from the hacker news frontpage
 # and writes them to ./tmp/comments.txt
 # 
-# typically: comment_links ./out/index.html
+# typically: comment_links ./out/index.html ./tmp
 extract_comment_links() {
   local html_file=$1
+  local tmp_dir=$2
 
   local comment_urls
 
@@ -59,7 +60,7 @@ extract_comment_links() {
     | grep -E -o "\".+\"" \
     | sed 's/\"//g')
 
-  echo "${comment_urls}" > ./tmp/comments.txt
+  echo "${comment_urls}" > "${tmp_dir}/comments.txt"
 }
 
 # --------------------------------------------------------------------
@@ -98,14 +99,19 @@ download_pages_from_file() {
 
 # --------------------------------------------------------------------
 main() {
-  printf "Clearing ./tmp and ./out directories\n"
-  rm ./tmp/* || true
-  rm ./out/* || true
+  local tmp_dir="./tmp"
+  local out_dir="./out"
+  local target_site="news.ycombinator.com"
 
-  download "news.ycombinator.com" "./out/index.html"
-  extract_comment_links "./out/index.html"
-  sanitize_comment_links "./out/index.html"
-  download_pages_from_file "news.ycombinator.com" "./tmp/comments.txt" "./out"
+  printf "Clearing %s and %s directories\n" "${tmp_dir}" "${out_dir}"
+
+  rm ${tmp_dir}/* || true
+  rm ${out_dir}/* || true
+
+  download "${target_site}" "${out_dir}/index.html"
+  extract_comment_links "${out_dir}/index.html" "${tmp_dir}"
+  sanitize_comment_links "${out_dir}/index.html"
+  download_pages_from_file "${target_site}" "${tmp_dir}/comments.txt" "${out_dir}"
 }
 
 main
