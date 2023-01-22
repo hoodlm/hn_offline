@@ -1,7 +1,6 @@
 #! /usr/bin/bash
 set -eu
 set -o pipefail
-set -o posix
 
 # --------------------------------------------------------------------
 # Usage: download "news.ycombinator.com" "./out/index.html"
@@ -26,7 +25,7 @@ download() {
 # files with question marks in them, I'm just stripping out
 # the '?' from all comment URLs.
 sanitize_comment_links() {
-  sed "s/item?id/itemid/g" -i $1
+  sed "s/item?id/itemid/g" -i "$1"
 }
 
 # --------------------------------------------------------------------
@@ -60,7 +59,7 @@ extract_comment_links() {
     | grep -E -o "\".+\"" \
     | sed 's/\"//g')
 
-  echo ${comment_urls} > ./tmp/comments.txt
+  echo "${comment_urls}" > ./tmp/comments.txt
 }
 
 
@@ -74,11 +73,11 @@ main() {
   extract_comment_links "./out/index.html"
   sanitize_comment_links "./out/index.html"
 
-  for comment_url in $(cat "./tmp/comments.txt"); do
+  while IFS= read -r comment_url; do
     local dest_file
-    dest_file=$(echo $comment_url | sed "s/item?id/itemid/g")
+    dest_file=${comment_url/item?id/itemid}
     download "news.ycombinator.com/${comment_url}" "./out/${dest_file}"
-  done
+  done < "./tmp/comments.txt"
 }
 
 main
