@@ -62,6 +62,39 @@ extract_comment_links() {
   echo "${comment_urls}" > ./tmp/comments.txt
 }
 
+# --------------------------------------------------------------------
+# Download sub-pages read from a file.
+# $1 is the hostname/homepage (e.g. example.org)
+# $2 is the filename
+# $3 is the out directory (e.g. ./out)
+#
+# The contents of the file should be one page per line. For example,
+# if it looks like this:
+#
+#   example1.html
+#   example2.html
+#
+# Then this function would download these pages to ./out:
+#   example.org/example1.html
+#   example.org/example2.html
+#
+# typically: download_pages_from_file news.ycombinator.com ./tmp/comments.txt ./out
+download_pages_from_file() {
+  local base_url=$1
+  local in_file=$2
+  local out_dir=$3
+
+  while IFS= read -r subpage; do
+    local dest_file
+    dest_file="${out_dir}/${subpage}"
+
+    # same hack to strip question-marks from filenames; see sanitize_comment_links
+    dest_file=${dest_file/item?id/itemid}
+
+    download "${base_url}/${subpage}" "${dest_file}"
+  done < "${in_file}"
+}
+
 
 # --------------------------------------------------------------------
 main() {
@@ -72,12 +105,7 @@ main() {
   download "news.ycombinator.com" "./out/index.html"
   extract_comment_links "./out/index.html"
   sanitize_comment_links "./out/index.html"
-
-  while IFS= read -r comment_url; do
-    local dest_file
-    dest_file=${comment_url/item?id/itemid}
-    download "news.ycombinator.com/${comment_url}" "./out/${dest_file}"
-  done < "./tmp/comments.txt"
+  download_pages_from_file "news.ycombinator.com" "./tmp/comments.txt" "./out"
 }
 
 main
