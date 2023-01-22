@@ -107,10 +107,11 @@ do_download() {
     front_page="${target_site}/front?day=${extracted_date}"
   fi
 
-  printf "Clearing %s and %s directories\n" "${tmp_dir}" "${out_dir}"
-
+  printf "Cleaning %s directory\n" "${tmp_dir}"
   rm ${tmp_dir}/* || true
-  rm ${out_dir}/* || true
+
+  printf "Removing existing index.html, if any\n"
+  rm "${out_dir}/index.html" || true
 
   download "${front_page}" "${out_dir}/index.html"
   extract_comment_links "${out_dir}/index.html" "${tmp_dir}"
