@@ -96,9 +96,7 @@ download_pages_from_file() {
   done < "${in_file}"
 }
 
-
-# --------------------------------------------------------------------
-main() {
+do_download() {
   local tmp_dir="./tmp"
   local out_dir="./out"
   local target_site="news.ycombinator.com"
@@ -114,4 +112,19 @@ main() {
   download_pages_from_file "${target_site}" "${tmp_dir}/comments.txt" "${out_dir}"
 }
 
-main
+handle_args() {
+  if [ "$1" = "help" ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Help info goes here"
+    exit 0
+  fi
+}
+
+# --------------------------------------------------------------------
+main() {
+  if [ $# -gt 0 ]; then
+    handle_args "$@"
+  fi
+  do_download
+}
+
+main "$@"
