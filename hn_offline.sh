@@ -100,6 +100,7 @@ do_download() {
   local tmp_dir="./tmp"
   local out_dir="./out"
   local target_site="news.ycombinator.com"
+  local css="${target_site}/news.css"
   local front_page
   if [ -z "${extracted_date:-}" ]; then
     front_page="${target_site}"
@@ -114,6 +115,7 @@ do_download() {
   rm "${out_dir}/index.html" || true
 
   download "${front_page}" "${out_dir}/index.html"
+  download "${css}"        "${out_dir}/news.css"
   extract_comment_links "${out_dir}/index.html" "${tmp_dir}"
   sanitize_comment_links "${out_dir}/index.html"
   download_pages_from_file "${target_site}" "${tmp_dir}/comments.txt" "${out_dir}"

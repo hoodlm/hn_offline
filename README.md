@@ -20,7 +20,7 @@ It does not archive other features of the website, like:
 * The 'from' pages to discover other articles from a certain source
 * Anything after page 1
 
-It also doesn't download any non-HTML assets like CSS or Javascript. This
+It also doesn't download any non-HTML assets like Javascript. This
 means some functions on the website don't work; for example, you can't
 collapse threads or hide individual posts.
 
