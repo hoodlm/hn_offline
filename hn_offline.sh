@@ -126,7 +126,9 @@ error() {
 
 handle_args() {
   if [ "$1" = "help" ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-    echo "USAGE: $0 [--date YYYY-MM-DD]"
+    echo "USAGE: $0 [--date <YYYY-MM-DD>]"
+    echo "OPTIONS:"
+    echo "  --date   Download the front page from a specific date"
     exit 0
   fi
 
