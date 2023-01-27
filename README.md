@@ -1,7 +1,7 @@
 This is a simple bash script for offline reading of Hacker News
 (news.ycombinator.com). By default it downloads the current
-front page (the top 30 items) along with their comment threads
-for offline reading.
+front page (the top 30 items) along with the comment threads
+for offline reading. It also downloads the css and javascript.
 
 ```
 bash hn_offline.sh
@@ -15,14 +15,10 @@ bash hn_offline.sh --date 2021-12-11
 
 External links are not archived; these are still online links.
 
-It does not archive other features of the website, like:
+It does not archive other parts of the website, like:
 * User pages
 * The 'from' pages to discover other articles from a certain source
 * Anything after page 1
-
-It also doesn't download any non-HTML assets like Javascript. This
-means some functions on the website don't work; for example, you can't
-collapse threads or hide individual posts.
 
 # What's the purpose of this?
 
