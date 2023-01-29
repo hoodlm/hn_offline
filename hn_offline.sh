@@ -3,105 +3,50 @@ set -eu
 set -o pipefail
 
 # --------------------------------------------------------------------
-# Usage: download "news.ycombinator.com" "./out/index.html"
+# Usage: download "news.ycombinator.com/front?day=2023-01-27" "./out/index.html"
 download() {
   local url=$1
-  local download_outfile=$2
+  local download_outdir=$2
 
-
-  printf "Downloading %s to %s\n" "${url}" "${download_outfile}"
-  wget --quiet "$url" -O "${download_outfile}"
-
-  # respect HN's robots.txt directive 'Crawl-delay: 30'
-  local sleep_seconds=31
-  printf "Waiting %s seconds between downloads\n" "${sleep_seconds}"
-  sleep "${sleep_seconds}"
+  printf "Downloading %s to %s\n" "${url}" "${download_outdir}"
+  pushd "$download_outdir"
+  wget \
+    --recursive --level=1 \
+    --accept-regex ".*item.+" \
+    --page-requisites \
+    --relative \
+    --adjust-extension \
+    --convert-links \
+    --limit-rate=50k \
+    --wait=60 --random-wait \
+    --progress=dot \
+    "$url"
+  popd
 }
 
-# --------------------------------------------------------------------
-# Comment links on HN follow the format like "item?id=34466855"
-# where id is a parameter to a backend webserver. Since we're just
-# saving these as static HTML, and it's a pain to work with unix
-# files with question marks in them, I'm just stripping out
-# the '?' from all comment URLs.
-sanitize_comment_links() {
-  sed "s/item?id/itemid/g" -i "$1"
+cleanup_converted_files() {
+  local download_outdir=$1
+  find "$download_outdir" -not -name "*[html|txt|css|keep]" \
+    -exec rm -v {} \;
 }
 
-# --------------------------------------------------------------------
-# obligatory before we go further,
-# https://stackoverflow.com/a/1732454
-#
-# "we shall surely both die if you parse html with
-# regular expressions," said the Frog.
-# "lol" said the Scorpion, "lmao"
+overwrite_index() {
+  local front_page=$1
+  local out_dir=$2
 
+  local destination_file_name="index.html"
 
-# --------------------------------------------------------------------
-# Extract all 'comment' links from the hacker news frontpage
-# and writes them to ./tmp/comments.txt
-# 
-# typically: comment_links ./out/index.html ./tmp
-extract_comment_links() {
-  local html_file=$1
-  local tmp_dir=$2
+  local source_file
+  source_file=$(find "$out_dir" | grep "$front_page")
+  local directory
+  directory=$(dirname "$source_file")
 
-  local comment_urls
-
-  # the first regex will give you a list of things like
-  #   <a href="item?id=34466855">46&nbsp;comments</a>
-  # then the second strips out just the first double-quoted segment:
-  #   "item?id=34466855"
-  # and finally a sed command to remove the double quotes:
-  #   item?id=34466855
-
-  comment_urls=$(\
-    grep -E -o "<a href=\"[^<>]+\">[^<>]+comments</a>" "$html_file" \
-    | grep -E -o "\".+\"" \
-    | sed 's/\"//g')
-
-  echo "${comment_urls}" > "${tmp_dir}/comments.txt"
-}
-
-# --------------------------------------------------------------------
-# Download sub-pages read from a file.
-# $1 is the hostname/homepage (e.g. example.org)
-# $2 is the filename
-# $3 is the out directory (e.g. ./out)
-#
-# The contents of the file should be one page per line. For example,
-# if it looks like this:
-#
-#   example1.html
-#   example2.html
-#
-# Then this function would download these pages to ./out:
-#   example.org/example1.html
-#   example.org/example2.html
-#
-# typically: download_pages_from_file news.ycombinator.com ./tmp/comments.txt ./out
-download_pages_from_file() {
-  local base_url=$1
-  local in_file=$2
-  local out_dir=$3
-
-  while IFS= read -r subpage; do
-    local dest_file
-    dest_file="${out_dir}/${subpage}"
-
-    # same hack to strip question-marks from filenames; see sanitize_comment_links
-    dest_file=${dest_file/item?id/itemid}
-
-    download "${base_url}/${subpage}" "${dest_file}"
-  done < "${in_file}"
+  cp -v "$source_file" "${directory}/${destination_file_name}"
 }
 
 do_download() {
-  local tmp_dir="./tmp"
   local out_dir="./out"
   local target_site="news.ycombinator.com"
-  local css="${target_site}/news.css"
-  local javascript="${target_site}/hn.js"
   local front_page
   if [ -z "${extracted_date:-}" ]; then
     front_page="${target_site}"
@@ -109,18 +54,14 @@ do_download() {
     front_page="${target_site}/front?day=${extracted_date}"
   fi
 
-  printf "Cleaning %s directory\n" "${tmp_dir}"
-  rm ${tmp_dir}/* || true
+  download "${front_page}" "${out_dir}"
+  cleanup_converted_files "${out_dir}"
 
-  printf "Removing existing index.html, if any\n"
-  rm "${out_dir}/index.html" || true
-
-  download "${front_page}" "${out_dir}/index.html"
-  download "${css}"        "${out_dir}/news.css"
-  download "${javascript}" "${out_dir}/hn.js"
-  extract_comment_links "${out_dir}/index.html" "${tmp_dir}"
-  sanitize_comment_links "${out_dir}/index.html"
-  download_pages_from_file "${target_site}" "${tmp_dir}/comments.txt" "${out_dir}"
+  # 'overwrite_index' is only required when frontpage
+  # for a specific date was downloaded
+  if [ -n "${extracted_date:-}" ]; then
+    overwrite_index "${front_page}" "${out_dir}"
+  fi
 }
 
 error() {

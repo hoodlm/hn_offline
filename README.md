@@ -1,7 +1,7 @@
-This is a simple bash script for offline reading of Hacker News
+This is a simple wget wrapper for offline reading of Hacker News
 (news.ycombinator.com). By default it downloads the current
 front page (the top 30 items) along with the comment threads
-for offline reading. It also downloads the css and javascript.
+for offline reading.
 
 ```
 bash hn_offline.sh
@@ -26,8 +26,19 @@ I use it to use Hacker News like a "newspaper" instead of a constantly
 changing page that I try to check every day or even multiple times a day to
 see if there's something new.
 
-I run a weekly cronjob that refreshes an offline copy from earlier in the week
-on a local web server. Then, I can point my browser at that local copy
+I run a daily cronjob at the end of the day that downloads the front
+page to a local web server:
+
+```
+pushd $HOME/utils/hn_offline
+bash hn_offline.sh --date "$(date +"%Y-%m-%d")"
+rsync --verbose --times --stats --recursive \
+  "./out/news.ycombinator.com/" \
+  "/var/www/html/hackernews"
+popd
+```
+
+Then, I can point my browser at that local server
 instead of at news.ycombinator.com.
 
 # Is this allowed?
@@ -35,6 +46,8 @@ instead of at news.ycombinator.com.
 Before using any crawling tool you should consult the website's robots.txt.
 
 HN's [robots.txt](https://news.ycombinator.com/robots.txt), as of
-2023-01-21, does not forbid crawling the main page or `/item?` paths. We
-use a default sleep of 31 seconds between downloads to comply with the
-`Crawl-delay` of 30 seconds.
+2023-01-21, does not forbid crawling the main page or `/item?` paths,
+and specifies a Crawl-delay of 30 seconds.
+
+wget, in recursive mode, respects robots.txt by default. Additionally,
+the script specifies a 60 second (+- 50%) wait between downloads.
