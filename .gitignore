@@ -1,7 +1,0 @@
-*swp
-
-tmp/*
-!tmp/.gitkeep
-
-out/*
-!out/.gitkeep
